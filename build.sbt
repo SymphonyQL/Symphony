@@ -7,57 +7,47 @@ version := "0.0.1"
 
 val sharedSettings = Seq(scalaVersion := "2.12.6")
 
-//- parser
+SymphonyBuild.buildSetting
 
-lazy val parser = crossProject(JSPlatform, JVMPlatform)
-  .crossType(crossType = CrossType.Pure)
-  .in(file("parser"))
+// - prelude
+
+lazy val prelude = crossProject(JSPlatform, JVMPlatform)
+  .crossType(crossType = CrossType.Full)
+  .in(file("symphony-prelude"))
   .settings(sharedSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "fastparse" % "1.0.0",
-      "com.typesafe.play" %%% "play-json" % "2.6.9"
-    )
-  )
+      Dependencies.fastParse.value,
+      Dependencies.playJson.value
+    ))
+  .settings(SymphonyBuild.buildSetting)
 
-lazy val parserJVM = parser.jvm
+lazy val preludeJVM = prelude.jvm
 
-lazy val parserJS = parser.js
-
-// - schema
-
-lazy val schema = crossProject(JSPlatform, JVMPlatform)
-  .crossType(crossType = CrossType.Pure)
-  .dependsOn(parser)
-  .in(file("schema"))
-  .settings(sharedSettings)
-
-lazy val schemaJVM = schema.jvm
-
-lazy val schemaJS = schema.js
+lazy val preludeJS = prelude.js
 
 // - symphony
 
-lazy val symphony = crossProject(JSPlatform, JVMPlatform)
+lazy val orchestra = crossProject(JSPlatform, JVMPlatform)
   .crossType(crossType = CrossType.Full)
-  .dependsOn(schema)
-  .in(file("symphony"))
+  .dependsOn(prelude)
+  .in(file("symphony-orchestra"))
   .settings(sharedSettings)
+  .settings(SymphonyBuild.buildSetting)
 
-lazy val symphonyJVM = symphony.jvm
 
-lazy val symphonyJS = symphony.js
+lazy val orchestraJVM = orchestra.jvm
+
+lazy val orchestraJS = orchestra.js
 
 //- below is the aggregation
 
 lazy val root = project.in(file("."))
   .aggregate(
-    parserJVM,
-    parserJS,
-    schemaJVM,
-    schemaJS,
-    symphonyJVM,
-    symphonyJS
+    preludeJVM,
+    preludeJS,
+    orchestraJVM,
+    orchestraJS
   )
   .settings(
     sharedSettings,
